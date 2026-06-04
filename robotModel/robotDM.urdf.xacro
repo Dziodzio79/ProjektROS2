@@ -1,0 +1,316 @@
+<?xml version="1.0"?>
+<robot name="rrr_equal_rods_30cm_start_q2_minus90_q3_plus180_from_current">
+<material name="base_black">
+    <color rgba="0.02 0.02 0.02 1.0"/>
+  </material>
+
+  <material name="joint_blue">
+    <color rgba="0.05 0.25 0.95 1.0"/>
+  </material>
+
+  <material name="rod_silver">
+    <color rgba="0.78 0.78 0.80 1.0"/>
+  </material>
+
+  <material name="effector_silver">
+    <color rgba="0.60 0.60 0.62 1.0"/>
+  </material>
+
+  <link name="world"/>
+  <joint name="world_joint" type="fixed">
+    <parent link="world"/>
+    <child link="base_link"/>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+  </joint>
+
+  <link name="base_link">
+    <visual>
+      <origin xyz="0 0 0.225" rpy="0 0 0"/>
+      <geometry><cylinder radius="0.200" length="0.450"/></geometry>
+      <material name="base_black"/>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0.225" rpy="0 0 0"/>
+      <geometry><cylinder radius="0.200" length="0.450"/></geometry>
+    </collision>
+
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="10.0"/>
+      <inertia ixx="0.001" ixy="0" ixz="0"
+               iyy="0.001" iyz="0"
+               izz="0.001"/>
+    </inertial>
+
+  </link>
+
+  <joint name="arm_1_joint" type="revolute">
+    <parent link="base_link"/>
+    <child link="joint_1_body"/>
+    <origin xyz="0 0 0.450" rpy="0 0 0"/>
+    <axis xyz="0 0 1"/>
+    <limit lower="-3.14159" upper="3.14159" effort="100" velocity="1.5"/>
+    <dynamics damping="0.1" friction="0.0"/>
+  </joint>
+
+  <link name="joint_1_body">
+    <visual name="joint_1_body_visual">
+      <origin xyz="0 0 0.170" rpy="0 0 0"/>
+      <geometry>
+        <cylinder radius="0.085" length="0.340"/>
+      </geometry>
+      <material name="joint_blue"/>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0.170" rpy="0 0 0"/>
+      <geometry>
+        <cylinder radius="0.085" length="0.340"/>
+      </geometry>
+    </collision>
+
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="1.0"/>
+      <inertia ixx="0.001" ixy="0" ixz="0"
+               iyy="0.001" iyz="0"
+               izz="0.001"/>
+    </inertial>
+
+  </link>
+
+  <joint name="joint_1_to_rod_1" type="fixed">
+    <parent link="joint_1_body"/>
+    <child link="rod_1_lower_1_to_2"/>
+    <origin xyz="0.235 0 0.170" rpy="0 0 0"/>
+  </joint>
+
+  <link name="rod_1_lower_1_to_2">
+    <visual name="rod_1_lower_1_to_2_visual">
+      <origin xyz="0 0 0" rpy="0 1.5708 0"/>
+      <geometry>
+        <cylinder radius="0.025" length="0.300"/>
+      </geometry>
+      <material name="rod_silver"/>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 1.5708 0"/>
+      <geometry>
+        <cylinder radius="0.025" length="0.300"/>
+      </geometry>
+    </collision>
+
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="0.4"/>
+      <inertia ixx="0.001" ixy="0" ixz="0"
+               iyy="0.001" iyz="0"
+               izz="0.001"/>
+    </inertial>
+
+  </link>
+
+  <joint name="joint_1_to_rod_2" type="fixed">
+    <parent link="joint_1_body"/>
+    <child link="rod_2_vertical_1_to_2"/>
+    <origin xyz="0.385 0 0.320" rpy="0 0 0"/>
+  </joint>
+
+  <link name="rod_2_vertical_1_to_2">
+    <visual name="rod_2_vertical_1_to_2_visual">
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <cylinder radius="0.025" length="0.300"/>
+      </geometry>
+      <material name="rod_silver"/>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <cylinder radius="0.025" length="0.300"/>
+      </geometry>
+    </collision>
+
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="0.4"/>
+      <inertia ixx="0.001" ixy="0" ixz="0"
+               iyy="0.001" iyz="0"
+               izz="0.001"/>
+    </inertial>
+
+  </link>
+
+  <joint name="joint_1_to_rod_3" type="fixed">
+    <parent link="joint_1_body"/>
+    <child link="rod_3_upper_1_to_2"/>
+    <origin xyz="0.535 0 0.470" rpy="0 0 0"/>
+  </joint>
+
+  <link name="rod_3_upper_1_to_2">
+    <visual name="rod_3_upper_1_to_2_visual">
+      <origin xyz="0 0 0" rpy="0 1.5708 0"/>
+      <geometry>
+        <cylinder radius="0.025" length="0.300"/>
+      </geometry>
+      <material name="rod_silver"/>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 1.5708 0"/>
+      <geometry>
+        <cylinder radius="0.025" length="0.300"/>
+      </geometry>
+    </collision>
+
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="0.4"/>
+      <inertia ixx="0.001" ixy="0" ixz="0"
+               iyy="0.001" iyz="0"
+               izz="0.001"/>
+    </inertial>
+
+  </link>
+
+  <joint name="arm_2_joint" type="revolute">
+    <parent link="joint_1_body"/>
+    <child link="joint_2_body"/>
+    <origin xyz="0.855 0 0.470" rpy="1.5708 0 0"/>
+    <axis xyz="1 0 0"/>
+    <limit lower="-1.5708" upper="1.5708" effort="100" velocity="1.5"/>
+    <dynamics damping="0.1" friction="0.0"/>
+  </joint>
+
+  <link name="joint_2_body">
+    <visual name="joint_2_body_visual">
+      <origin xyz="0 0 0.000" rpy="0 1.5708 0"/>
+      <geometry>
+        <cylinder radius="0.085" length="0.340"/>
+      </geometry>
+      <material name="joint_blue"/>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0.000" rpy="0 1.5708 0"/>
+      <geometry>
+        <cylinder radius="0.085" length="0.340"/>
+      </geometry>
+    </collision>
+
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="1.0"/>
+      <inertia ixx="0.001" ixy="0" ixz="0"
+               iyy="0.001" iyz="0"
+               izz="0.001"/>
+    </inertial>
+
+  </link>
+
+  <joint name="joint_2_to_rod_4" type="fixed">
+    <parent link="joint_2_body"/>
+    <child link="rod_4_2_to_3"/>
+    <origin xyz="0 0.235 0" rpy="0 0 0"/>
+  </joint>
+
+  <link name="rod_4_2_to_3">
+    <visual name="rod_4_2_to_3_visual">
+      <origin xyz="0 0 0" rpy="1.5708 0 0"/>
+      <geometry>
+        <cylinder radius="0.025" length="0.300"/>
+      </geometry>
+      <material name="rod_silver"/>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="1.5708 0 0"/>
+      <geometry>
+        <cylinder radius="0.025" length="0.300"/>
+      </geometry>
+    </collision>
+
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="0.4"/>
+      <inertia ixx="0.001" ixy="0" ixz="0"
+               iyy="0.001" iyz="0"
+               izz="0.001"/>
+    </inertial>
+
+  </link>
+
+  <joint name="arm_3_joint" type="revolute">
+    <parent link="joint_2_body"/>
+    <child link="joint_3_body"/>
+    <origin xyz="0 0.555 0" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+    <limit lower="-1.5708" upper="1.5708" effort="100" velocity="1.5"/>
+    <dynamics damping="0.1" friction="0.0"/>
+  </joint>
+
+  <link name="joint_3_body">
+    <visual name="joint_3_body_visual">
+      <origin xyz="0 0 0.000" rpy="1.5708 0 0"/>
+      <geometry>
+        <cylinder radius="0.085" length="0.340"/>
+      </geometry>
+      <material name="joint_blue"/>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0.000" rpy="1.5708 0 0"/>
+      <geometry>
+        <cylinder radius="0.085" length="0.340"/>
+      </geometry>
+    </collision>
+
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="1.0"/>
+      <inertia ixx="0.001" ixy="0" ixz="0"
+               iyy="0.001" iyz="0"
+               izz="0.001"/>
+    </inertial>
+
+  </link>
+
+  <joint name="joint_3_to_end_effector" type="fixed">
+    <parent link="joint_3_body"/>
+    <child link="end_effector"/>
+    <origin xyz="0.085 0 0" rpy="1.5708 0 0"/>
+  </joint>
+
+  <link name="end_effector">
+    <visual name="effector_upper_bar">
+      <origin xyz="0.12 0 0.06" rpy="0 1.5708 0"/>
+      <geometry><cylinder radius="0.016" length="0.24"/></geometry>
+      <material name="effector_silver"/>
+    </visual>
+    <visual name="effector_lower_bar">
+      <origin xyz="0.12 0 -0.06" rpy="0 1.5708 0"/>
+      <geometry><cylinder radius="0.016" length="0.24"/></geometry>
+      <material name="effector_silver"/>
+    </visual>
+    <visual name="effector_crossbar">
+      <origin xyz="0.24 0 0" rpy="0 0 0"/>
+      <geometry><cylinder radius="0.016" length="0.12"/></geometry>
+      <material name="effector_silver"/>
+    </visual>
+    <visual name="effector_ball_stem">
+      <origin xyz="0.33 0 0" rpy="0 1.5708 0"/>
+      <geometry><cylinder radius="0.012" length="0.18"/></geometry>
+      <material name="effector_silver"/>
+    </visual>
+    <visual name="effector_ball">
+      <origin xyz="0.44 0 0" rpy="0 0 0"/>
+      <geometry><sphere radius="0.03"/></geometry>
+      <material name="effector_silver"/>
+    </visual>
+
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="0.3"/>
+      <inertia ixx="0.001" ixy="0" ixz="0"
+               iyy="0.001" iyz="0"
+               izz="0.001"/>
+    </inertial>
+
+  </link>
+
+</robot>
