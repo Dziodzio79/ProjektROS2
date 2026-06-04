@@ -8,33 +8,66 @@ Model robota RRR w ROS2 dla konfiguracji osi:
 
 Repozytorium zawiera pakiet `projektDM` z modelem URDF, plikiem launch oraz skryptami do sterowania przegubami i wizualizacji workspace.
 
-## Struktura projektu
+## Wymiary modelu
+
+Podstawowe wymiary przyjęte w modelu:
 
 ```text
-launch/
-  robotDM.launch.py
+BASE_HEIGHT  = 0.45 m
+BASE_RADIUS  = 0.20 m
 
-robotModel/
-  model robota URDF
+JOINT_LENGTH = 0.34 m
+JOINT_RADIUS = 0.085 m
 
-projektDM/
-  simulate_joints.py
-  workspace.py
-
-resource/
-test/
-package.xml
-setup.py
-setup.cfg
+ROD_LENGTH   = 0.30 m
+ROD_RADIUS   = 0.025 m
 ```
 
-## Najważniejsze elementy
+Elementy modelu:
+
+- podstawa: czarny cylinder,
+- przeguby: trzy jednakowe niebieskie walce,
+- pręty konstrukcyjne: cztery jednakowe srebrne walce,
+- efektor końcowy: osobna srebrna konstrukcja.
+
+Cztery główne pręty konstrukcyjne mają identyczne wymiary:
+
+```text
+długość = 0.30 m
+promień = 0.025 m
+średnica = 0.05 m
+```
+
+Przeguby mają identyczne wymiary:
+
+```text
+długość = 0.34 m
+promień = 0.085 m
+średnica = 0.17 m
+```
+
+## Podgląd modelu
+
+Widok modelu robota w RViz:
+
+![Model robota](images/robot.jpeg)
+
+Widok wygenerowanego workspace:
+
+![Workspace robota](images/workspace.jpeg)
+
+## Najważniejsze pliki
+
+```text
+launch/robotDM.launch.py
+projektDM/simulate_joints.py
+projektDM/workspace.py
+robotModel/
+```
 
 ### `robotDM.launch.py`
 
 Plik launch uruchamia model robota w ROS2/RViz.
-
-Uruchomienie:
 
 ```bash
 ros2 launch projektDM robotDM.launch.py
@@ -42,7 +75,11 @@ ros2 launch projektDM robotDM.launch.py
 
 ### `simulate_joints.py`
 
-Skrypt publikuje wiadomości `JointState` na temat `/joint_states`.
+Skrypt publikuje wiadomości `JointState` na temat:
+
+```text
+/joint_states
+```
 
 Służy do ręcznego zadawania kątów trzech przegubów:
 
@@ -54,7 +91,11 @@ arm_3_joint
 
 Kąty są wpisywane w stopniach i konwertowane na radiany.
 
-Uruchomienie:
+Każda zadana konfiguracja jest ustawiana względem konfiguracji bazowej:
+
+```text
+0 0 0
+```
 
 ```bash
 ros2 run projektDM simulate_joints
@@ -65,10 +106,10 @@ ros2 run projektDM simulate_joints
 Skrypt generuje i publikuje marker workspace robota.
 
 Workspace uwzględnia:
+
 - zakresy ruchu przegubów,
 - efektor końcowy,
-- dolny obszar pracy,
-- konfiguracje krytyczne, między innymi `90 90 90` oraz `180 180 180`.
+- dolny obszar pracy.
 
 Marker publikowany jest na temat:
 
@@ -76,10 +117,18 @@ Marker publikowany jest na temat:
 /workspace_marker
 ```
 
-Uruchomienie:
-
 ```bash
 ros2 run projektDM workspace
+```
+
+## Wizualizacja
+
+Model, sterowanie przegubami oraz workspace są przygotowane pod wizualizację w RViz.
+
+W RViz jako `Fixed Frame` należy ustawić:
+
+```text
+world
 ```
 
 ## Budowanie
@@ -91,16 +140,10 @@ colcon build
 source install/setup.bash
 ```
 
-Po przebudowaniu pakietu można uruchomić launch oraz skrypty:
+Po przebudowaniu pakietu:
 
 ```bash
 ros2 launch projektDM robotDM.launch.py
 ros2 run projektDM simulate_joints
 ros2 run projektDM workspace
 ```
-
-## Uwagi
-
-Projekt zakłada konfigurację robota RRR `|-|`.
-
-Model, sterowanie przegubami oraz workspace są przygotowane pod wizualizację w RViz.
