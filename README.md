@@ -1,74 +1,50 @@
-# ProjektROS2 — Model robota RRR `|-*`
+# ProjektROS2
 
-Projekt zawiera model robota typu **RRR** przygotowany w ROS2.  
-Konfiguracja osi robota odpowiada układowi:
+Model robota RRR w ROS2 dla konfiguracji osi:
 
 ```text
-|-*
+|-|
 ```
 
-czyli:
+Repozytorium zawiera pakiet `projektDM` z modelem URDF, plikiem launch oraz skryptami do sterowania przegubami i wizualizacji workspace.
 
-- pierwszy przegub obraca się wokół osi pionowej,
-- drugi przegub jest ustawiony prostopadle względem pierwszego,
-- trzeci przegub jest ustawiony zgodnie z przyjętą konfiguracją `*`,
-- model zawiera również efektor końcowy.
-
----
-
-## Zawartość projektu
-
-W projekcie znajdują się między innymi:
+## Struktura projektu
 
 ```text
 launch/
-resource/
+  robotDM.launch.py
+
 robotModel/
+  model robota URDF
+
 projektDM/
+  simulate_joints.py
+  workspace.py
+
+resource/
+test/
+package.xml
 setup.py
 setup.cfg
-package.xml
-test/
 ```
 
-Najważniejsze elementy:
+## Najważniejsze elementy
 
-- model robota w formacie URDF,
-- pliki uruchomieniowe ROS2,
-- skrypty Python do sterowania przegubami,
-- skrypt do wizualizacji przestrzeni roboczej,
-- konfiguracja pakietu ROS2.
+### `robotDM.launch.py`
 
----
+Plik launch uruchamia model robota w ROS2/RViz.
 
-## Model robota
+Uruchomienie:
 
-Robot składa się z:
-
-- czarnej podstawy,
-- trzech niebieskich przegubów,
-- czterech srebrnych prętów konstrukcyjnych,
-- efektora końcowego.
-
-W modelu przyjęto:
-
-```text
-ROD_LENGTH = 0.30 m
-JOINT_LENGTH = 0.34 m
-BASE_HEIGHT = 0.45 m
+```bash
+ros2 launch projektDM robotDM.launch.py
 ```
 
-Pozycja startowa została ustawiona tak, aby robot po uruchomieniu miał poprawną orientację względem konfiguracji `|-*`.
+### `simulate_joints.py`
 
----
+Skrypt publikuje wiadomości `JointState` na temat `/joint_states`.
 
-## Sterowanie przegubami
-
-Do zadawania kątów wykorzystywany jest publisher `JointState`.
-
-Kąty podawane są w stopniach, a następnie konwertowane na radiany.
-
-Przykładowe przeguby:
+Służy do ręcznego zadawania kątów trzech przegubów:
 
 ```text
 arm_1_joint
@@ -76,108 +52,55 @@ arm_2_joint
 arm_3_joint
 ```
 
-Przykładowe konfiguracje testowe:
+Kąty są wpisywane w stopniach i konwertowane na radiany.
 
-```text
-0 0 0
-90 90 90
-180 180 180
+Uruchomienie:
+
+```bash
+ros2 run projektDM simulate_joints
 ```
 
----
+### `workspace.py`
 
-## Workspace
-
-Projekt zawiera również skrypt do generowania przestrzeni roboczej robota.
+Skrypt generuje i publikuje marker workspace robota.
 
 Workspace uwzględnia:
-
 - zakresy ruchu przegubów,
 - efektor końcowy,
-- dolny zakres ruchu,
-- konfiguracje krytyczne takie jak `90 90 90` oraz `180 180 180`.
+- dolny obszar pracy,
+- konfiguracje krytyczne, między innymi `90 90 90` oraz `180 180 180`.
 
-Workspace jest publikowany jako marker w RViz.
+Marker publikowany jest na temat:
 
----
+```text
+/workspace_marker
+```
 
-## Budowanie projektu
+Uruchomienie:
 
-W katalogu workspace ROS2:
+```bash
+ros2 run projektDM workspace
+```
+
+## Budowanie
+
+Z poziomu workspace ROS2:
 
 ```bash
 colcon build
-```
-
-Następnie:
-
-```bash
 source install/setup.bash
 ```
 
----
-
-## Uruchamianie
-
-Przykładowe uruchomienie launch file:
+Po przebudowaniu pakietu można uruchomić launch oraz skrypty:
 
 ```bash
-ros2 launch projektDM <nazwa_pliku_launch>.py
+ros2 launch projektDM robotDM.launch.py
+ros2 run projektDM simulate_joints
+ros2 run projektDM workspace
 ```
 
-Uruchomienie sterowania przegubami:
+## Uwagi
 
-```bash
-ros2 run projektDM <nazwa_skryptu>
-```
+Projekt zakłada konfigurację robota RRR `|-|`.
 
-Uruchomienie workspace:
-
-```bash
-ros2 run projektDM <nazwa_skryptu_workspace>
-```
-
-Nazwy plików launch oraz skryptów należy dopasować do aktualnych nazw w pakiecie.
-
----
-
-## Docker
-
-Projekt był przygotowywany w środowisku Docker/ROS2.
-
-Przykładowe wejście do działającego kontenera:
-
-```bash
-docker exec -it <nazwa_kontenera> bash
-```
-
-Jeśli kontener jest zatrzymany:
-
-```bash
-docker start <nazwa_kontenera>
-docker exec -it <nazwa_kontenera> bash
-```
-
----
-
-## Git
-
-Repozytorium projektu:
-
-```text
-https://github.com/Dziodzio79/ProjektROS2
-```
-
-Podstawowe komendy:
-
-```bash
-git add .
-git commit -m "Update project"
-git push
-```
-
----
-
-## Autor
-
-Projekt wykonany jako model robota RRR w ROS2.
+Model, sterowanie przegubami oraz workspace są przygotowane pod wizualizację w RViz.
