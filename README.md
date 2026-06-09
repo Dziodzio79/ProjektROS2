@@ -46,6 +46,14 @@ promień = 0.085 m
 średnica = 0.17 m
 ```
 
+## Obliczenia
+
+Wszystkie obliczenia wykorzystane w projekcie zostały umieszczone w osobnym pliku PDF znajdującym się w folderze `pdf/`.
+
+Plik z obliczeniami:
+
+[Obliczenia.pdf](pdf/Obliczenia.pdf)
+
 ## Podgląd modelu
 
 Widok modelu robota w RViz:
@@ -63,6 +71,7 @@ launch/robotDM.launch.py
 projektDM/simulate_joints.py
 projektDM/workspace.py
 robotModel/
+pdf/Obliczenia.pdf
 ```
 
 ### `robotDM.launch.py`
