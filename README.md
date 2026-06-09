@@ -1,6 +1,6 @@
 # ProjektROS2
 
-Model robota RRR w ROS2 dla konfiguracji osi:
+Model robota RRR w ROS2 jazzy dla konfiguracji osi:
 
 ```text
 |-|
