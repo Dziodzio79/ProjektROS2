@@ -8,6 +8,13 @@ Model robota RRR w ROS2 dla konfiguracji osi:
 
 Repozytorium zawiera pakiet `projektDM` z modelem URDF, plikiem launch oraz skryptami do sterowania przegubami i wizualizacji workspace.
 
+## Autorzy projektu
+
+Projekt wykonali:
+
+- Dominik Stawarczyk
+- Maciej Sowa
+
 ## Wymiary modelu
 
 Podstawowe wymiary przyjęte w modelu:
