@@ -9,12 +9,14 @@ from rclpy.node import Node
 from visualization_msgs.msg import Marker
 from geometry_msgs.msg import Point
 
+
 def T(x, y, z):
     M = np.eye(4)
     M[0, 3] = x
     M[1, 3] = y
     M[2, 3] = z
     return M
+
 
 def Rx(a):
     c, s = math.cos(a), math.sin(a)
@@ -25,6 +27,7 @@ def Rx(a):
     R[2, 2] = c
     return R
 
+
 def Ry(a):
     c, s = math.cos(a), math.sin(a)
     R = np.eye(4)
@@ -33,6 +36,7 @@ def Ry(a):
     R[2, 0] = -s
     R[2, 2] = c
     return R
+
 
 def Rz(a):
     c, s = math.cos(a), math.sin(a)
@@ -43,8 +47,10 @@ def Rz(a):
     R[1, 1] = c
     return R
 
-def deg(a):
-    return a * math.pi / 180.0
+
+# =========================================================
+# Parametry geometryczne manipulatora
+# =========================================================
 
 BASE_HEIGHT = 0.70
 
@@ -69,55 +75,30 @@ ARM_3_Y = ROD_4_END_Y + JOINT_LENGTH / 2.0
 
 EFF_FIXED_X = JOINT_RADIUS
 
-EFFECTOR_REACH = 0.47
-DOWN_FROM_JOINT1 = 2.0 * ROD_LENGTH + JOINT_LENGTH + EFFECTOR_REACH
-LOWER_Z = max(0.0, ARM_1_Z - DOWN_FROM_JOINT1)
+# Punkt końcówki efektora w lokalnym układzie efektora.
+# To jest JEDEN punkt roboczy, a nie cała geometria efektora.
+TOOL_TIP_LOCAL = np.array([0.44, 0.0, 0.0, 1.0])
 
-def line_x(x0, x1, y, z, n):
-    return [(float(x), y, z) for x in np.linspace(x0, x1, n)]
+# =========================================================
+# Parametry generowania workspace
+# =========================================================
 
-def line_z(x, y, z0, z1, n):
-    return [(x, y, float(z)) for z in np.linspace(z0, z1, n)]
+# Liczba losowych konfiguracji. Większa liczba = gładszy obrys.
+NUM_SAMPLES = 70000
 
-def sphere_points(cx, cy, cz, r, rings=True):
-    pts = [
-        (cx, cy, cz),
-        (cx + r, cy, cz),
-        (cx - r, cy, cz),
-        (cx, cy + r, cz),
-        (cx, cy - r, cz),
-        (cx, cy, cz + r),
-        (cx, cy, cz - r),
-    ]
+# Podział kierunków. Końcowo liczba punktów będzie maksymalnie:
+# AZ_BINS * EL_BINS, czyli tu około 7200 punktów, a nie setki tysięcy.
+AZ_BINS = 120
+EL_BINS = 60
 
-    if rings:
-        for a in np.linspace(0, 2 * math.pi, 12, endpoint=False):
-            pts.append((cx, cy + r * math.cos(a), cz + r * math.sin(a)))
-            pts.append((cx + r * math.cos(a), cy + r * math.sin(a), cz))
-            pts.append((cx + r * math.cos(a), cy, cz + r * math.sin(a)))
+# Środek, względem którego szukamy zewnętrznej powłoki.
+# Dla tej wizualizacji dobrze brać poziom pierwszego przegubu.
+SHELL_CENTER = np.array([0.0, 0.0, ARM_1_Z])
 
-    return pts
+# Zakresy kątów przegubów
+Q_MIN = -math.pi
+Q_MAX = math.pi
 
-def build_effector_points_sparse():
-    pts = []
-    pts += line_x(0.00, 0.24, 0.0, 0.06, 4)
-    pts += line_x(0.00, 0.24, 0.0, -0.06, 4)
-    pts += line_z(0.24, 0.0, -0.06, 0.06, 4)
-    pts += line_x(0.24, 0.42, 0.0, 0.0, 4)
-    pts += sphere_points(0.44, 0.0, 0.0, 0.03, rings=False)
-    return pts
-
-def build_effector_points_dense():
-    pts = []
-    pts += line_x(0.00, 0.24, 0.0, 0.06, 18)
-    pts += line_x(0.00, 0.24, 0.0, -0.06, 18)
-    pts += line_z(0.24, 0.0, -0.06, 0.06, 18)
-    pts += line_x(0.24, 0.42, 0.0, 0.0, 18)
-    pts += sphere_points(0.44, 0.0, 0.0, 0.03, rings=True)
-    return pts
-
-EFFECTOR_POINTS_SPARSE = build_effector_points_sparse()
-EFFECTOR_POINTS_DENSE = build_effector_points_dense()
 
 class WorkspaceNode(Node):
 
@@ -129,9 +110,13 @@ class WorkspaceNode(Node):
         self.points = None
         self.timer = self.create_timer(1.0, self.tick)
 
-        self.get_logger().info("Workspace node started: effector + smooth downward clearance")
+        self.get_logger().info("Workspace node started: outer shell only")
 
     def fk_to_effector_frame(self, q1, q2, q3):
+        """
+        Kinematyka prosta do układu efektora.
+        """
+
         Tm = np.eye(4)
 
         Tm = Tm @ T(0, 0, ARM_1_Z)
@@ -150,6 +135,17 @@ class WorkspaceNode(Node):
 
         return Tm
 
+    def tool_tip_position(self, q1, q2, q3):
+        """
+        Zwraca pozycję jednego punktu końcówki efektora.
+        Nie dodajemy całej geometrii efektora, bo to sztucznie pogrubia
+        i wypełnia workspace.
+        """
+
+        T_eff = self.fk_to_effector_frame(q1, q2, q3)
+        p = T_eff @ TOOL_TIP_LOCAL
+        return p[:3]
+
     def add_point(self, pts, x, y, z):
         p = Point()
         p.x = float(x)
@@ -157,94 +153,96 @@ class WorkspaceNode(Node):
         p.z = float(z)
         pts.append(p)
 
-    def add_effector_geometry(self, pts, q1, q2, q3, dense=False):
-        T_eff = self.fk_to_effector_frame(q1, q2, q3)
-        eff_points = EFFECTOR_POINTS_DENSE if dense else EFFECTOR_POINTS_SPARSE
+    def add_shell_candidate(self, shell, p):
+        """
+        Zostawia tylko najbardziej zewnętrzny punkt w danym kierunku.
 
-        for ex, ey, ez in eff_points:
-            p4 = T_eff @ np.array([ex, ey, ez, 1.0])
-            self.add_point(pts, p4[0], p4[1], p4[2])
+        Dzielimy przestrzeń na kierunki azymut/elewacja.
+        Dla każdego kierunku zapamiętujemy punkt o największej odległości
+        od SHELL_CENTER. Dzięki temu środek workspace nie jest wypełniany.
+        """
 
-    def add_downward_clearance_from_joint1_level(self, pts):
+        v = p - SHELL_CENTER
+        r = float(np.linalg.norm(v))
 
-        max_radius = 1.40
+        if r < 1e-9:
+            return
 
-        lower_samples = 14000
+        az = math.atan2(v[1], v[0])
+        el = math.asin(max(-1.0, min(1.0, v[2] / r)))
 
-        for _ in range(lower_samples):
-            r = max_radius * math.sqrt(np.random.uniform(0.0, 1.0))
-            a = np.random.uniform(-math.pi, math.pi)
+        az_idx = int((az + math.pi) / (2.0 * math.pi) * AZ_BINS)
+        el_idx = int((el + math.pi / 2.0) / math.pi * EL_BINS)
 
-            x = r * math.cos(a)
-            y = r * math.sin(a)
+        az_idx = max(0, min(AZ_BINS - 1, az_idx))
+        el_idx = max(0, min(EL_BINS - 1, el_idx))
 
-            z = np.random.uniform(LOWER_Z, ARM_1_Z)
+        key = (az_idx, el_idx)
 
-            self.add_point(pts, x, y, z)
-
-        ground_samples = 2500
-        for _ in range(ground_samples):
-            r = max_radius * math.sqrt(np.random.uniform(0.0, 1.0))
-            a = np.random.uniform(-math.pi, math.pi)
-            x = r * math.cos(a)
-            y = r * math.sin(a)
-            z = LOWER_Z + np.random.uniform(0.0, 0.035)
-            self.add_point(pts, x, y, z)
+        if key not in shell or r > shell[key][0]:
+            shell[key] = (r, p)
 
     def generate(self):
+        """
+        Generuje sam zewnętrzny obrys workspace.
+
+        Poprzednia wersja wypełniała środek, bo dodawała:
+        - losowe punkty wewnątrz objętości,
+        - całą geometrię efektora dla każdej konfiguracji.
+
+        Ta wersja:
+        - liczy tylko punkt końcówki efektora,
+        - losuje dużo konfiguracji,
+        - zostawia wyłącznie najbardziej zewnętrzne punkty w danych kierunkach.
+        """
+
+        shell = {}
+
+        rng = np.random.default_rng()
+
+        # Losowe konfiguracje
+        for _ in range(NUM_SAMPLES):
+            q1 = rng.uniform(Q_MIN, Q_MAX)
+            q2 = rng.uniform(Q_MIN, Q_MAX)
+            q3 = rng.uniform(Q_MIN, Q_MAX)
+
+            p = self.tool_tip_position(q1, q2, q3)
+            self.add_shell_candidate(shell, p)
+
+        # Dodatkowe konfiguracje regularne, żeby złapać skraje dokładniej.
+        sweep = np.linspace(Q_MIN, Q_MAX, 73)
+
+        for q1 in sweep:
+            for q2 in sweep[::3]:
+                for q3 in sweep[::3]:
+                    p = self.tool_tip_position(q1, q2, q3)
+                    self.add_shell_candidate(shell, p)
+
+        for q2 in sweep:
+            for q1 in sweep[::3]:
+                for q3 in sweep[::3]:
+                    p = self.tool_tip_position(q1, q2, q3)
+                    self.add_shell_candidate(shell, p)
+
+        for q3 in sweep:
+            for q1 in sweep[::3]:
+                for q2 in sweep[::3]:
+                    p = self.tool_tip_position(q1, q2, q3)
+                    self.add_shell_candidate(shell, p)
+
         pts = []
 
-        random_samples = 1500
-
-        for _ in range(random_samples):
-            q1 = np.random.uniform(-math.pi, math.pi)
-            q2 = np.random.uniform(-math.pi, math.pi)
-            q3 = np.random.uniform(-math.pi, math.pi)
-            self.add_effector_geometry(pts, q1, q2, q3, dense=False)
-
-        mandatory_configs_deg = [
-            (0, 0, 0),
-            (90, 90, 90),
-            (180, 180, 180),
-            (-90, -90, -90),
-            (-180, -180, -180),
-            (90, 0, 0),
-            (0, 90, 0),
-            (0, 0, 90),
-            (180, 0, 0),
-            (0, 180, 0),
-            (0, 0, 180),
-        ]
-
-        for a1, a2, a3 in mandatory_configs_deg:
-            self.add_effector_geometry(pts, deg(a1), deg(a2), deg(a3), dense=True)
-
-        sweep = [deg(a) for a in range(-180, 181, 10)]
-
-        for q1 in sweep:
-            self.add_effector_geometry(pts, q1, deg(90), deg(90), dense=True)
-        for q2 in sweep:
-            self.add_effector_geometry(pts, deg(90), q2, deg(90), dense=True)
-        for q3 in sweep:
-            self.add_effector_geometry(pts, deg(90), deg(90), q3, dense=True)
-
-        for q1 in sweep:
-            self.add_effector_geometry(pts, q1, deg(180), deg(180), dense=True)
-        for q2 in sweep:
-            self.add_effector_geometry(pts, deg(180), q2, deg(180), dense=True)
-        for q3 in sweep:
-            self.add_effector_geometry(pts, deg(180), deg(180), q3, dense=True)
-
-        self.add_downward_clearance_from_joint1_level(pts)
+        for _, p in shell.values():
+            self.add_point(pts, p[0], p[1], p[2])
 
         return pts
 
     def tick(self):
 
         if self.points is None:
-            self.get_logger().info("Generating workspace...")
+            self.get_logger().info("Generating workspace outer shell...")
             self.points = self.generate()
-            self.get_logger().info(f"Done: {len(self.points)} points")
+            self.get_logger().info(f"Done: {len(self.points)} shell points")
 
         m = Marker()
         m.header.frame_id = "base_link"
@@ -255,16 +253,18 @@ class WorkspaceNode(Node):
         m.type = Marker.POINTS
         m.action = Marker.ADD
 
-        m.scale.x = 0.018
-        m.scale.y = 0.018
+        # Mniejsze punkty, żeby nie zalewały wizualizacji.
+        m.scale.x = 0.012
+        m.scale.y = 0.012
 
         m.color.r = 0.1
         m.color.g = 0.4
         m.color.b = 1.0
-        m.color.a = 0.58
+        m.color.a = 0.75
 
         m.points = self.points
         self.pub.publish(m)
+
 
 def main(args=None):
     rclpy.init(args=args)
@@ -277,6 +277,7 @@ def main(args=None):
 
     node.destroy_node()
     rclpy.shutdown()
+
 
 if __name__ == "__main__":
     main()
